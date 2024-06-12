@@ -1,12 +1,13 @@
+#!/usr/bin/python3
 from math import degrees, radians, pi, sqrt, atan, cos, sin, acos
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, timedelta
 import ephem
-import coordinateConverter 
-import time 
+import coordinateConverter
+import time
 import os
-import glob 
+import glob
 
 def getArgs() :
     import argparse
@@ -31,7 +32,7 @@ def getObserver(observatory) :
         obs.lon='-76.05609'
     else :
         print("ERROR in getObserver.  No observatory called {0:s}.  Exiting".format(observatory))
-        exit() 
+        exit()
     return obs
 
 def getSun(obs) :
@@ -89,34 +90,34 @@ def getGalaxy(obs) :
 class dummyTelescope() :
     def __init__(self) :
         self.az, self.alt = 10., 70.
-        return 
+        return
     def position(self) :
         self.az += 1.0
         self.az = self.az % 360.
         self.alt += 1.0
-        self.alt = self.alt % 90. 
+        self.alt = self.alt % 90.
         return self.az, self.alt
-    
+
 def getTelescope(obs,dummy) :
     import socket
     name = socket.gethostname().lower()
-    carp_site = ('receiver' in name) or ('motion' in name)  
+    carp_site = ('receiver' in name) or ('motion' in name)
     if carp_site :
-        import xmlrpc.client as xml 
+        import xmlrpc.client as xml
         rpc = xml.ServerProxy("http://172.22.121.35:9090")
         values = rpc.query_both_axes()
         alt, az = values[0], values[1]
         return 90. - az, alt
     else :
         az, alt = dummy.position()
-        return 90. - az, alt 
-    
+        return 90. - az, alt
+
 def telescopeInMotion(args,obs,dummy,lastTime,lastUVW) :
     #print("In telescopeInMotion(): lastTime={0:f} lastUVW={1:s}".format(lastTime,str(lastUVW)))
     try:
-        phi, tht = getTelescope(obs,dummy) 
+        phi, tht = getTelescope(obs,dummy)
         #print "tht={0:f} radians".format(tht)
-        cs, sn = cos(radians(tht)), sin(radians(tht)) 
+        cs, sn = cos(radians(tht)), sin(radians(tht))
         phi = radians(phi)
         UVW = [sn*cos(phi), sn*sin(phi), cs]
         angle = degrees(acos(lastUVW[0]*UVW[0]  + lastUVW[1]*UVW[1] + lastUVW[2]*UVW[2]))
@@ -129,13 +130,13 @@ def telescopeInMotion(args,obs,dummy,lastTime,lastUVW) :
 
     return False, lastTime, lastUVW
 
-    
+
 def getPulsarLists(obs,args) :
     #;PSRJ;RAJ;DECJ;P0;S1400;
     #1;J0332+5434;03:32:59.3;+54:34:43.5;0.714520;203.00;
     pulsar, pulsarP0, pulsarS1400 = {}, {}, {}
     for line in open('pulsarList.txt','r').readlines()[1:] :
-        if len(line) < 20 : continue 
+        if len(line) < 20 : continue
         psr = ephem.FixedBody()
         #psr._epoch="1950/1/1 00:00:00"
         vals = line.split(';')
@@ -154,16 +155,16 @@ def printPulsarList(pulsar, pulsarP0, pulsarS1400) :
         if pulsarS1400[psr] < args.threshold : continue
         count += 1
         print("Psr: {0:11s} RA={1:6.2f} dec={2:6.2f} P0={3:9.6f} S1400={4:6.2f}".format(
-            psr,degrees(pulsar[psr]._ra),degrees(pulsar[psr]._dec), pulsarP0[psr], pulsarS1400[psr])) 
-        
+            psr,degrees(pulsar[psr]._ra),degrees(pulsar[psr]._dec), pulsarP0[psr], pulsarS1400[psr]))
+
     print("{0:d} pulsars in total".format(count))
 
 
-# begin execution here 
+# begin execution here
 args = getArgs()
 obs = getObserver(args.observatory)
-dummy = dummyTelescope() 
-obs.date = ephem.now() 
+dummy = dummyTelescope()
+obs.date = ephem.now()
 
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(11, 7), facecolor='#0D5973')
 
@@ -172,12 +173,12 @@ ax.set_rlabel_position(-25.)  # Move radial labels away from plotted line
 ax.grid(True,color='white')
 ax.set_facecolor('black')
 ax.set_xticks(ax.get_xticks())
-ax.xaxis.set_ticklabels(['E','','N','','W','','S',' '],color='white') 
+ax.xaxis.set_ticklabels(['E','','N','','W','','S',' '],color='white')
 ax.set_yticks([10.,20.,30.,40.,50.,60.,70.,80.,90.])
 ax.yaxis.set_ticklabels(['','','60','','','30','','','0'],color='white')
 
 # add the telescope direction
-az, al = getTelescope(obs,dummy) 
+az, al = getTelescope(obs,dummy)
 telescopeMarker1, = ax.plot([radians(az)], [90.-al], '+', color = 'red', markersize=20, label='Telescope' )
 telescopeMarker2, = ax.plot([radians(az)], [90.-al], 'o', markerfacecolor = 'none', markeredgecolor = 'red', markersize=8 )
 
@@ -185,24 +186,24 @@ az, al = getSun(obs)
 #sunMarker1, = ax.plot(radians(az), 90.-al, 'y*', markersize=20.)
 sunMarker2, = ax.plot(radians(az), 90.-al, 'o', color="#ffff00", markersize=18.0, label="Sun")
 
-az, al = getMoon(obs) 
+az, al = getMoon(obs)
 moonMarker, = ax.plot(radians(az), 90.-al, 'wo', markersize=18., label="Moon")
 
-az, al = getPolaris(obs) 
-polarisMarker, = ax.plot(radians(az), 90.-al, 'w*', markersize=10., label="Polaris") 
+az, al = getPolaris(obs)
+polarisMarker, = ax.plot(radians(az), 90.-al, 'w*', markersize=10., label="Polaris")
 
-az, al = getCasA(obs) 
+az, al = getCasA(obs)
 casAMarker, = ax.plot(radians(az), 90.-al, 'r*', markersize=10., label="Cas A")
 
-az, al = getM31(obs) 
-M31Marker, = ax.plot(radians(az), 90.-al, 'wd', markersize=10., label="M31") 
+az, al = getM31(obs)
+M31Marker, = ax.plot(radians(az), 90.-al, 'wd', markersize=10., label="M31")
 
-az, al = getM33(obs) 
-M33Marker, = ax.plot(radians(az), 90.-al, 'gd', markersize=10., label="M33")  
+az, al = getM33(obs)
+M33Marker, = ax.plot(radians(az), 90.-al, 'gd', markersize=10., label="M33")
 
 #draw the galaxy
-phi, theta = getGalaxy(obs) 
-galaxyLine, = ax.plot(phi,theta, 'g-') 
+phi, theta = getGalaxy(obs)
+galaxyLine, = ax.plot(phi,theta, 'g-')
 
 #galactic longitude markers
 galacticLongitudeMarkers, galacticLongitudeText = {}, {}
@@ -211,17 +212,17 @@ for gLong in np.linspace(-160.,180.,18) :
     (az, al)  = coordinateConverter.E2H(obs, RA, dec)
     if (al > 0. ):
         gm, = ax.plot(radians(-az+90.), 90.-al, 'g+', markersize=10.)
-        galacticLongitudeMarkers[gLong] = gm 
+        galacticLongitudeMarkers[gLong] = gm
         txt = "  {0:.0f}".format(gLong)
         gt = ax.text(radians(-az+90.), 90.-al, txt, color='g')
         galacticLongitudeText[gLong] = gt
 
-# dummy point to include zero 
+# dummy point to include zero
 ax.plot(90.,0.,'w.')
-   
-# create a box onto which the pulsar list can be printed 
+
+# create a box onto which the pulsar list can be printed
 ax2 = fig.add_subplot(2,9,16,facecolor='#0D5973')
-ax2.get_xaxis().set_visible(False) 
+ax2.get_xaxis().set_visible(False)
 ax2.get_yaxis().set_visible(False)
 ax2.axis('off')
 
@@ -235,7 +236,7 @@ topPulsarList = sortedPulsarList[0:N]
 
 #add the pulsars
 nObject = len(pulsar)
-pulsarMarkers, pulsarLabels = {}, {} 
+pulsarMarkers, pulsarLabels = {}, {}
 for p in pulsar.keys() :
     psr = pulsar[p]
     S1400 = pulsarS1400[p]
@@ -243,16 +244,16 @@ for p in pulsar.keys() :
     (az, al)  = coordinateConverter.E2H(obs, degrees(psr._ra), degrees(psr._dec))
     az = -az + 90.
     pm, = ax.plot(radians(az), 90.-al, 'o', color = '#90F5F5', markersize=max(sqrt(pulsarS1400[p]),1.) )
-    pulsarMarkers[p] = pm  
+    pulsarMarkers[p] = pm
     if p in topPulsarList :
-        ii = topPulsarList.index(p) 
+        ii = topPulsarList.index(p)
         (az, al)  = coordinateConverter.E2H(obs, degrees(psr._ra), degrees(psr._dec))
         az = -az + 90.
         pl = ax.text(radians(az), 45., txt[ii], color = '#90F5F5', size=16)
-        pulsarLabels[p] = pl 
+        pulsarLabels[p] = pl
 
 # time text
-yPos, dy = 0.9, 0.12 
+yPos, dy = 0.9, 0.12
 timeText = ax2.text(.1, yPos , args.observatory + ':  ' + str(obs.date) + ' UTC', color='white', fontsize=14)
 yPos -= 0.05
 for i in range(N) :
@@ -260,13 +261,13 @@ for i in range(N) :
     psr = sortedPulsarList[i]
     st1 = "{0:s}: {1:s}  {2:6.1f} mJy  {3:5.1f} ms".format(txt[i],psr,pulsarS1400[psr],1000.*pulsarP0[psr])
     ax2.text(-0.25, yPos, st1, color='#90F5F5', fontsize=14)
-    
+
 angle = radians(40.)
 ax.legend(loc="upper left",fontsize=16, labelcolor='white', facecolor='#0D5973', bbox_to_anchor=(.6 + np.cos(angle)/1.5, .5 + np.sin(angle)/1.5))
 
 plt.show(block=False)
 
-# animate the display 
+# animate the display
 lastTime, lastUVW = 0., [0., 0., -1.]
 iter = 0
 os.system("echo GO > starGO")
@@ -275,11 +276,11 @@ while len(glob.glob('starGO')) > 0 :
     for i in range(12) :
         if args.animation > 1.01 : time.sleep(1.)
         #else : time.sleep(10.0)
-            
+
         inMotion, lastTime, lastUVW = telescopeInMotion(args,obs,dummy,lastTime,lastUVW)
-        #inMotion = False 
+        #inMotion = False
         if firstIteration or inMotion :
-            firstIteration = False 
+            firstIteration = False
             az, al = getTelescope(obs,dummy)
             # drop a bread crumb to keep track of where the telescope has been
             telescopeMarker, = ax.plot([radians(az)], [90.-al], 'ro', markersize=4 )
@@ -292,29 +293,29 @@ while len(glob.glob('starGO')) > 0 :
         iter += 1
 
     timeText.set_text(args.observatory + ':  ' + str(obs.date) + ' UTC')
-    
-    az, al = getTelescope(obs,dummy)    
+
+    az, al = getTelescope(obs,dummy)
     telescopeMarker1.set_data([radians(az)],[90.-al])
     telescopeMarker2.set_data([radians(az)],[90.-al])
 
     az, al = getSun(obs)
     #sunMarker1.set_data([radians(az)],[90.-al])
-    sunMarker2.set_data([radians(az)],[90.-al]) 
+    sunMarker2.set_data([radians(az)],[90.-al])
 
-    az, al = getMoon(obs) 
+    az, al = getMoon(obs)
     moonMarker.set_data([radians(az)],[90.-al])
 
-    az, al = getPolaris(obs) 
+    az, al = getPolaris(obs)
     polarisMarker.set_data([radians(az)],[90.-al])
 
-    az, al = getCasA(obs) 
+    az, al = getCasA(obs)
     casAMarker.set_data([radians(az)],[90.-al])
 
-    az, al = getM31(obs) 
-    M31Marker.set_data([radians(az)], [90.-al]) 
+    az, al = getM31(obs)
+    M31Marker.set_data([radians(az)], [90.-al])
 
-    phi, theta = getGalaxy(obs) 
-    galaxyLine.set_data(phi,theta) 
+    phi, theta = getGalaxy(obs)
+    galaxyLine.set_data(phi,theta)
 
     #galactic longitude markers
     for gLong in galacticLongitudeMarkers.keys() :
@@ -322,7 +323,7 @@ while len(glob.glob('starGO')) > 0 :
         (az, al)  = coordinateConverter.E2H(obs, RA, dec)
         if al < 0. : al = -1000.
         galacticLongitudeMarkers[gLong].set_data(radians(-az+90.), 90.-al)
-        galacticLongitudeText[gLong].set_position([radians(-az+90.), 90.-al]) 
+        galacticLongitudeText[gLong].set_position([radians(-az+90.), 90.-al])
 
     #pulsars
     for p in pulsarMarkers.keys() :
@@ -333,7 +334,7 @@ while len(glob.glob('starGO')) > 0 :
         if p in topPulsarList :
             if al < 0. : al = -1000.
             pulsarLabels[p].set_position([radians(az), 95.-al])
-        
+
     plt.pause(5.0)
 
 
