@@ -117,11 +117,11 @@ def telescopeInMotion(args,obs,dummy,lastTime,lastUVW) :
     try:
         phi, tht = getTelescope(obs,dummy)
         #print "tht={0:f} radians".format(tht)
-        cs, sn = cos(radians(tht)), sin(radians(tht))
-        phi = radians(phi)
+        tht, phi = radians(90. - tht) , radians(phi)
+        cs, sn = cos(tht), sin(tht)
         UVW = [sn*cos(phi), sn*sin(phi), cs]
         angle = degrees(acos(lastUVW[0]*UVW[0]  + lastUVW[1]*UVW[1] + lastUVW[2]*UVW[2]))
-        if angle > 1. :    # dish is moving
+        if angle > 2. :    # dish is moving
             return True, time.time(), UVW
         else :
             return False, time.time(), UVW
@@ -276,14 +276,14 @@ while len(glob.glob('starGO')) > 0 :
     for i in range(12) :
         if args.animation > 1.01 : time.sleep(1.)
         #else : time.sleep(10.0)
-
         inMotion, lastTime, lastUVW = telescopeInMotion(args,obs,dummy,lastTime,lastUVW)
         #inMotion = False
         if firstIteration or inMotion :
             firstIteration = False
             az, al = getTelescope(obs,dummy)
             # drop a bread crumb to keep track of where the telescope has been
-            telescopeMarker, = ax.plot([radians(az)], [90.-al], 'ro', markersize=4 )
+            #telescopeMarker, = ax.plot([radians(az)], [90.-al], 'ro', markersize=4 )
+            telescopeMarker, = ax.plot([radians(az)], [90.-al], 'r.' )
             ax.set_rmax(90.0)
             break
 
