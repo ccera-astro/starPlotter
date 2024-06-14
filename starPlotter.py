@@ -124,7 +124,7 @@ def telescopeInMotion(args,obs,dummy,lastTime,lastUVW) :
         if angle > 2. :    # dish is moving
             return True, time.time(), UVW
         else :
-            return False, time.time(), UVW
+            return False, time.time(), lastUVW
     except:
         print("starPlotter.TelescopeInMotion() failed.")
 
