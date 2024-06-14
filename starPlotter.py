@@ -31,7 +31,7 @@ def getObserver(observatory) :
         obs.lat='45.35025'
         obs.lon='-76.05609'
     else :
-        print("ERROR in getObserver.  No observatory called {0:s}.  Exiting".format(observatory))
+        print("ERROR in starPlotter.getObserver().  No observatory called {0:s}.  Exiting".format(observatory))
         exit()
     return obs
 
@@ -126,7 +126,7 @@ def telescopeInMotion(args,obs,dummy,lastTime,lastUVW) :
         else :
             return False, time.time(), UVW
     except:
-        print("TelescopeInMotion failed.")
+        print("starPlotter.TelescopeInMotion() failed.")
 
     return False, lastTime, lastUVW
 
