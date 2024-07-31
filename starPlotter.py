@@ -78,6 +78,13 @@ def getM33(obs) :
     az = -az + 90.
     return az, al
 
+def getM42(obs) :
+    M42 = ephem.readdb("M42,f|G,5:35:17,-5:23:28,4.16,2000,11433|3700|35")
+    M42.compute(obs)
+    az, al = degrees(M42.az), degrees(M42.alt)
+    az = -az + 90.
+    return az, al
+
 def getGalaxy(obs) :
     phi, theta = [], []
     for gLong in np.linspace(-180.,180,180) :
@@ -201,6 +208,9 @@ M31Marker, = ax.plot(radians(az), 90.-al, 'wd', markersize=10., label="M31")
 az, al = getM33(obs)
 M33Marker, = ax.plot(radians(az), 90.-al, 'gd', markersize=10., label="M33")
 
+az, al = getM42(obs)
+M42Marker, = ax.plot(radians(az), 90.-al, 'wd', markersize=10., label="M42")
+
 #draw the galaxy
 phi, theta = getGalaxy(obs)
 galaxyLine, = ax.plot(phi,theta, 'g-')
@@ -311,8 +321,8 @@ while len(glob.glob('starGO')) > 0 :
     az, al = getCasA(obs)
     casAMarker.set_data([radians(az)],[90.-al])
 
-    az, al = getM31(obs)
-    M31Marker.set_data([radians(az)], [90.-al])
+    az, al = getM42(obs)
+    M42Marker.set_data([radians(az)], [90.-al])
 
     phi, theta = getGalaxy(obs)
     galaxyLine.set_data(phi,theta)
