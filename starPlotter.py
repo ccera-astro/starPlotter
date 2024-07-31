@@ -335,7 +335,7 @@ while len(glob.glob('starGO')) > 0 :
             if al < 0. : al = -1000.
             pulsarLabels[p].set_position([radians(az), 95.-al])
 
-    plt.pause(5.0)
+    plt.pause(30.0)
 
 
 
